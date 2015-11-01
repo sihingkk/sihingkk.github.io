@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<rss version='2.0' xmlns:atom='http://www.w3.org/2005/Atom'>
+<channel>
+<atom:link href='http://sihingkk.github.io' rel='self' type='application/rss+xml'/>
+<generator>
+clj-rss
+</generator>
+<title>
+Pragmatic developer Blog
+</title>
+<link>
+http://sihingkk.github.io
+</link>
+<description>
+Pragmatic developer blog... another one ;)
+</description>
+<lastBuildDate>
+Mon, 02 Nov 2015 00:12:54 +0100
+</lastBuildDate>
+</channel>
+</rss>

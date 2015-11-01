@@ -1,0 +1,19 @@
+{:site-title       "Pragmatic developer Blog"
+ :author           "Krzysztof Kaczmarek"
+ :description      "Pragmatic developer blog... another one ;)"
+ :site-url         "http://sihingkk.github.io"
+ :post-root        "posts"
+ :tag-root         "tags"
+ :page-root        "pages"
+ :blog-prefix      ""
+ :rss-name         "feed.xml"
+ :rss-filters      ["cryogen"]
+ :recent-posts     3
+ :post-date-format "yyyy-MM-dd"
+ :sass-src         nil
+ :sass-dest        nil
+ :resources        ["css" "js" "img" "404.html"]
+ :keep-files       [".git"]
+ :disqus?          true
+ :disqus-shortname "sihingkk"
+ :ignored-files    [#"\.#.*" #".*\.swp$"]}
