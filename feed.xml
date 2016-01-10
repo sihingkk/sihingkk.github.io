@@ -1,0 +1,55 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<rss version='2.0' xmlns:atom='http://www.w3.org/2005/Atom'>
+<channel>
+<atom:link href='http://sihingkk.github.io' rel='self' type='application/rss+xml'/>
+<generator>
+clj-rss
+</generator>
+<title>
+Pragmatic developer Blog
+</title>
+<link>
+http://sihingkk.github.io
+</link>
+<description>
+Pragmatic developer blog... another one ;)
+</description>
+<lastBuildDate>
+Mon, 02 Nov 2015 00:12:54 +0100
+</lastBuildDate>
+<item>
+<guid>
+http://sihingkk.github.io/posts/2015-06-04-algorithm-functional-way.html
+</guid>
+<link>
+http://sihingkk.github.io/posts/2015-06-04-algorithm-functional-way.html
+</link>
+<title>
+Finding Minimal Edit Script functional way - part 1
+</title>
+<description>
+&lt;h1&gt;&lt;a name=&quot;purpose&quot;&gt;&lt;/a&gt;Purpose&lt;/h1&gt;&lt;p&gt;I got recently excellent assignment - to implement algorithm finding Minimal Edit Script. As usually it's a task that is only interesting for person writing it, as the topic is really nicely defined and most implementation (for example used in GIT) are based on papers written by Eugene W. Myers in his papers &lt;a href='http://xmailserver.org/diff2.pdf'&gt;An O(ND) Difference Algorithm and its Variations&lt;/a&gt;. We are going to implement that in functional way - and use it to compare how those different approaches differs in terms of code readability and performance.&lt;/p&gt;&lt;p&gt;Why Minimal Edit script is cool? Because it leads us directly to calculating &lt;a href='http://www.levenshtein.net'&gt;Levenstein Distance&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Why we want to implement it in functional way? Because I trully believe that this could be better:&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;/img/ses&amp;#95;alg.png&quot; alt=&quot;Minimal edit script&quot; /&gt;&lt;/p&gt;&lt;p&gt;Please note that this is not script calculating Minimal Edit Script, only it's length. We will go a bit further and calculate an exact Minimal Edit Script.&lt;/p&gt;&lt;h1&gt;&lt;a name=&quot;tech&amp;#95;stack&quot;&gt;&lt;/a&gt;Tech stack&lt;/h1&gt;&lt;p&gt;As we would like be as buzz-word oriented as it's possible, I'm going to write nice algorithm in &lt;del&gt;Scala&lt;/del&gt; &lt;em&gt;Nope. Clojure. Please don't be afraid of brackets&lt;/em&gt;.  But firstly we need to understand algorithm itself.&lt;/p&gt;&lt;h1&gt;&lt;a name=&quot;algorithm&amp;#95;explanation&quot;&gt;&lt;/a&gt;Algorithm explanation&lt;/h1&gt;&lt;p&gt;For sake of simplicity I will assume that elements of the list are letters. To explain solution we need firstly to introduce several concepts&lt;/p&gt;&lt;h2&gt;&lt;a name=&quot;minimal&amp;#95;edit&amp;#95;script&quot;&gt;&lt;/a&gt;Minimal Edit Script&lt;/h2&gt;&lt;p&gt;A minimal edit script is set of instructions transforming the former into the latter.  For example: For Kiteen And Sitting:&lt;ul&gt;&lt;li&gt;&lt;strong&gt;k&lt;/strong&gt;itten → &lt;strong&gt;s&lt;/strong&gt;itten (substitution of &quot;s&quot; for &quot;k&quot;)&lt;/li&gt;&lt;li&gt;sitt &lt;strong&gt;e&lt;/strong&gt; n → sitt &lt;strong&gt;i&lt;/strong&gt; n (substitution of &quot;i&quot; for &quot;e&quot;)&lt;/li&gt;&lt;li&gt;sittin → sittin &lt;strong&gt;g&lt;/strong&gt;  (insertion of &quot;g&quot; at the end). &lt;/li&gt;&lt;/ul&gt;&lt;h2&gt;&lt;a name=&quot;editor&amp;#95;table&quot;&gt;&lt;/a&gt;Editor table&lt;/h2&gt;is a matrix nxn where we have first world on one axis and second word on another. A path from top-left to right-bottom cornercan be interpreted as edit script, where:&lt;/p&gt;&lt;ul&gt;&lt;li&gt;going down -&gt; adding a letter&lt;/li&gt;&lt;li&gt;going right -&gt; removing a letter&lt;/li&gt;&lt;li&gt;going cross when letter are equals -&gt; leaving a letter&lt;/li&gt;&lt;li&gt;going cross when letter are not equals -&gt; substitution a letter&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;for example:&lt;/p&gt;&lt;p&gt;Kitten Sitting&lt;/p&gt;&lt;h1&gt;&lt;a name=&quot;functional&amp;#95;code&quot;&gt;&lt;/a&gt;Functional Code&lt;/h1&gt;&lt;p&gt;Functional Programming is usually about reducing problem to find a proper data strucure and finding set of transfomations.&lt;/p&gt;&lt;p&gt;In our case datastructure will be a vector [xs ys path] where &lt;ul&gt;&lt;li&gt;xs is first word&lt;/li&gt;&lt;li&gt;ys is second word&lt;/li&gt;&lt;li&gt;path is a minimal edit script translating xs into ys&lt;/li&gt;&lt;/ul&gt;The algorithm itself is about finding set of paths allowing 1 more change each step. So firstly we check what paths are when we allow one change, than how far we can go with 2 changes etc. Hence finding a solution is extending every possible path so long as we get an bottom right corner:&lt;/p&gt;&lt;pre&gt;&lt;code&gt;&amp;#40;defn next-paths &amp;#91;envelopes&amp;#93;
+    &amp;#40;union &amp;#40;&amp;#40;comp &amp;#40;move cross&amp;#41; &amp;#40;move right&amp;#41;&amp;#41; envelopes&amp;#41;
+           &amp;#40;&amp;#40;comp &amp;#40;move cross&amp;#41; &amp;#40;move down&amp;#41;&amp;#41; envelopes&amp;#41;&amp;#41;&amp;#41;
+
+&amp;#40;defn- extract-path-for-solutions &amp;#91;&amp;#91;xs ys path&amp;#93;&amp;#93;
+    &amp;#40;if &amp;#40;every? empty? &amp;#91;xs ys&amp;#93;&amp;#41; path &amp;#91;&amp;#93;&amp;#41;&amp;#41;
+
+&amp;#40;defn find-path &amp;#91;envelopes&amp;#93;
+    &amp;#40;mapcat extract-path-for-solutions &amp;#40;iterate next-paths envelopes&amp;#41;&amp;#41;&amp;#41;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Moving in some direction in our case means removing item from one list, and adding info about where we moved:&lt;/p&gt;&lt;pre&gt;&lt;code&gt;&amp;#40;defn- move &amp;#91;where&amp;#93;
+    &amp;#40;partial map where&amp;#41;&amp;#41;
+    
+&amp;#40;defn- down &amp;#91;&amp;#91;xs ys path&amp;#93;&amp;#93;
+    &amp;#91;xs &amp;#40;rest ys&amp;#41; &amp;#40;conj path :down&amp;#41;&amp;#93;&amp;#41;
+    
+&amp;#40;defn- right &amp;#91;&amp;#91;xs ys path&amp;#93;&amp;#93;
+    &amp;#91;&amp;#40;rest xs&amp;#41; ys &amp;#40;conj path :right&amp;#41;&amp;#93;&amp;#41;   
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+<pubDate>
+Thu, 04 Jun 2015 00:00:00 +0200
+</pubDate>
+</item>
+</channel>
+</rss>

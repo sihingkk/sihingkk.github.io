@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Pragmatic developer Blog: Finding Minimal Edit Script functional way - part 1</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href='http://fonts.googleapis.com/css?family=Alegreya:400italic,700italic,400,700' rel='stylesheet'
+          type='text/css'>
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css">
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.1/styles/default.min.css">
+    <link href="../css/screen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+
+
+<nav class="navbar navbar-default">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/index.html">Pragmatic developer Blog</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav navbar-right">
+                <li ><a href="/index.html">Home</a></li>
+                <li
+                ><a href="/archives.html">Archives</a></li>
+                
+                <li
+                >
+                <a href="/pages/about.html">About me</a>
+                </li>
+                
+                <li><a href="/feed.xml">RSS</a></li>
+            </ul>
+        </div><!--/.nav-collapse -->
+    </div><!--/.container-fluid -->
+</nav>
+
+
+<div class="container">
+
+
+    <div class="row">
+        <div class="col-lg-9">
+            <div id="content">
+                
+<div id="post">
+    <div id="post-header">
+    <div id="post-meta" class="row">
+        <div class="col-lg-6">June 4, 2015</div>
+        
+    </div>
+    <h2>Finding Minimal Edit Script functional way - part 1</h2>
+</div>
+<div>
+    <ol class="contents"><li><a href="#purpose">Purpose</a></li><li><a href="#tech_stack">Tech stack</a></li><li><a href="#algorithm_explanation">Algorithm explanation</a></li><ol><li><a href="#minimal_edit_script">Minimal Edit Script</a></li><li><a href="#editor_table">Editor table</a></li></ol><li><a href="#functional_code">Functional Code</a></li></ol>
+    <h1><a name="purpose"></a>Purpose</h1><p>I got recently excellent assignment - to implement algorithm finding Minimal Edit Script. As usually it's a task that is only interesting for person writing it, as the topic is really nicely defined and most implementation (for example used in GIT) are based on papers written by Eugene W. Myers in his papers <a href='http://xmailserver.org/diff2.pdf'>An O(ND) Difference Algorithm and its Variations</a>. We are going to implement that in functional way - and use it to compare how those different approaches differs in terms of code readability and performance.</p><p>Why Minimal Edit script is cool? Because it leads us directly to calculating <a href='http://www.levenshtein.net'>Levenstein Distance</a></p><p>Why we want to implement it in functional way? Because I trully believe that this could be better:</p><p><img src="/img/ses&#95;alg.png" alt="Minimal edit script" /></p><p>Please note that this is not script calculating Minimal Edit Script, only it's length. We will go a bit further and calculate an exact Minimal Edit Script.</p><h1><a name="tech&#95;stack"></a>Tech stack</h1><p>As we would like be as buzz-word oriented as it's possible, I'm going to write nice algorithm in <del>Scala</del> <em>Nope. Clojure. Please don't be afraid of brackets</em>.  But firstly we need to understand algorithm itself.</p><h1><a name="algorithm&#95;explanation"></a>Algorithm explanation</h1><p>For sake of simplicity I will assume that elements of the list are letters. To explain solution we need firstly to introduce several concepts</p><h2><a name="minimal&#95;edit&#95;script"></a>Minimal Edit Script</h2><p>A minimal edit script is set of instructions transforming the former into the latter.  For example: For Kiteen And Sitting:<ul><li><strong>k</strong>itten → <strong>s</strong>itten (substitution of "s" for "k")</li><li>sitt <strong>e</strong> n → sitt <strong>i</strong> n (substitution of "i" for "e")</li><li>sittin → sittin <strong>g</strong>  (insertion of "g" at the end). </li></ul><h2><a name="editor&#95;table"></a>Editor table</h2>is a matrix nxn where we have first world on one axis and second word on another. A path from top-left to right-bottom cornercan be interpreted as edit script, where:</p><ul><li>going down -> adding a letter</li><li>going right -> removing a letter</li><li>going cross when letter are equals -> leaving a letter</li><li>going cross when letter are not equals -> substitution a letter</li></ul><p>for example:</p><p>Kitten Sitting</p><h1><a name="functional&#95;code"></a>Functional Code</h1><p>Functional Programming is usually about reducing problem to find a proper data strucure and finding set of transfomations.</p><p>In our case datastructure will be a vector [xs ys path] where <ul><li>xs is first word</li><li>ys is second word</li><li>path is a minimal edit script translating xs into ys</li></ul>The algorithm itself is about finding set of paths allowing 1 more change each step. So firstly we check what paths are when we allow one change, than how far we can go with 2 changes etc. Hence finding a solution is extending every possible path so long as we get an bottom right corner:</p><pre><code>&#40;defn next-paths &#91;envelopes&#93;
+    &#40;union &#40;&#40;comp &#40;move cross&#41; &#40;move right&#41;&#41; envelopes&#41;
+           &#40;&#40;comp &#40;move cross&#41; &#40;move down&#41;&#41; envelopes&#41;&#41;&#41;
+
+&#40;defn- extract-path-for-solutions &#91;&#91;xs ys path&#93;&#93;
+    &#40;if &#40;every? empty? &#91;xs ys&#93;&#41; path &#91;&#93;&#41;&#41;
+
+&#40;defn find-path &#91;envelopes&#93;
+    &#40;mapcat extract-path-for-solutions &#40;iterate next-paths envelopes&#41;&#41;&#41;
+</code></pre><p>Moving in some direction in our case means removing item from one list, and adding info about where we moved:</p><pre><code>&#40;defn- move &#91;where&#93;
+    &#40;partial map where&#41;&#41;
+    
+&#40;defn- down &#91;&#91;xs ys path&#93;&#93;
+    &#91;xs &#40;rest ys&#41; &#40;conj path :down&#41;&#93;&#41;
+    
+&#40;defn- right &#91;&#91;xs ys path&#93;&#93;
+    &#91;&#40;rest xs&#41; ys &#40;conj path :right&#41;&#93;&#41;   
+</code></pre>
+</div>
+
+<div id="post-tags">
+    <b>Tags: </b>
+    
+    <a href="/tags/Functional programming.html">Functional programming</a>
+    
+    <a href="/tags/Clojure.html">Clojure</a>
+    
+</div>
+
+
+    <div id="prev-next">
+        
+        
+    </div>
+
+    
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//sihingkk.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    
+
+
+</div>
+
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div id="sidebar">
+                
+                <div id="recent">
+                    <h3>Recent Posts</h3>
+                    <ul>
+                        
+                        <li><a href="/posts/2015-06-04-algorithm-functional-way.html">Finding Minimal Edit Script functional way - part 1</a></li>
+                        
+                    </ul>
+                </div>
+                
+                
+                <div id="tags">
+                    <h3>Tags</h3>
+                    <ul>
+                        
+                        <li><a href="/tags/Clojure.html">Clojure</a></li>
+                        
+                        <li><a href="/tags/Functional programming.html">Functional programming</a></li>
+                        
+                    </ul>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <footer>Copyright &copy; 2015 Krzysztof Kaczmarek
+        <p style="text-align: center;">Powered by <a href="http://cryogenweb.org">Cryogen</a></p></footer>
+</div>
+<script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+<script src="../js/highlight.pack.js" type="text/javascript"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+</body>
+</html>
+
